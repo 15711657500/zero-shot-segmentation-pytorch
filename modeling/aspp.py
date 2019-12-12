@@ -32,10 +32,7 @@ class _ASPPModule(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
-            elif isinstance(m, SynchronizedBatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.GroupNorm):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
@@ -78,6 +75,9 @@ class ASPP(nn.Module):
         self.aspp4 = _ASPPModule(inplanes, 256, 3, padding=dilations[3], dilation=dilations[3], BatchNorm=BatchNorm, abn=abn)
 
         if not self.abn:
+            self.gap1 = nn.AdaptiveAvgPool2d( (1, 1) )
+            self.gap2 = nn.Conv2d(inplanes, 256, 1, stride=1, bias=False)
+            self.gap3 = BatchNorm(256)
             self.global_avg_pool = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)),
                                              nn.Conv2d(inplanes, 256, 1, stride=1, bias=False),
                                              BatchNorm(256),
@@ -99,7 +99,13 @@ class ASPP(nn.Module):
         x2 = self.aspp2(x)
         x3 = self.aspp3(x)
         x4 = self.aspp4(x)
-        x5 = self.global_avg_pool(x)
+        
+        x5 = self.gap1(x)
+        x5 = self.gap2(x5)
+        if x5.shape[0] > 1:
+            x5 = self.gap3(x5)
+        x5 = nn.ReLU()(x5)
+        #x5 = self.global_avg_pool(x)
         x5 = F.interpolate(x5, size=x4.size()[2:], mode='bilinear', align_corners=True)
         x = torch.cat((x1, x2, x3, x4, x5), dim=1)
 
@@ -117,10 +123,7 @@ class ASPP(nn.Module):
                 # n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 # m.weight.data.normal_(0, math.sqrt(2. / n))
                 torch.nn.init.kaiming_normal_(m.weight)
-            elif isinstance(m, SynchronizedBatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.GroupNorm):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 

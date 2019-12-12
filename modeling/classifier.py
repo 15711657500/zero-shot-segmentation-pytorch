@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class Classifier(nn.Module):
     def __init__(self, num_classes):
-        super(Decoder, self).__init__()
+        super(Classifier, self).__init__()
         self.last_fc = nn.Linear(300, num_classes)
 
 

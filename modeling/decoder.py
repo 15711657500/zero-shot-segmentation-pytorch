@@ -12,7 +12,7 @@ class Decoder(nn.Module):
         self.abn = abn
         if BatchNorm == None:
             BatchNorm = Norm
-        if backbone == 'resnet' or backbone =='resnet152' or backbone == 'drn' or backbone == 'ibn':
+        if backbone == 'resnet' or backbone == 'resnet101' or backbone =='resnet152' or backbone == 'drn' or backbone == 'ibn':
             low_level_inplanes = 256
         elif backbone == 'efficientnet-b7':
             low_level_inplanes = 48
@@ -57,10 +57,7 @@ class Decoder(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
-            elif isinstance(m, SynchronizedBatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.GroupNorm):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 

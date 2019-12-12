@@ -115,7 +115,7 @@ class Trainer(object):
         # Using cuda
         if args.cuda:
             self.model = torch.nn.DataParallel(self.model, device_ids=self.args.gpu_ids)
-            patch_replication_callback(self.model)
+            #patch_replication_callback(self.model)
             self.model = self.model.cuda()
 
         # Resuming checkpoint
@@ -181,12 +181,12 @@ class Trainer(object):
             checkpoint = torch.load(args.classifier)
             s_dict = checkpoint['state_dict']
             model_dict = {}
-            state_dict = self.classifier.module.state_dict()
+            state_dict = self.classifier.state_dict()
             for k, v in s_dict.items():
                 if k in state_dict:
                     model_dict[k] = v
             state_dict.update(model_dict)
-            self.clasifier.module.load_state_dict(state_dict)
+            self.classifier.load_state_dict(state_dict)
             print("Classifier checkpoint successfully loaded")
             
         # Clear start epoch if fine-tuning
@@ -205,6 +205,8 @@ class Trainer(object):
             self.scheduler(self.optimizer, i, epoch, self.best_pred)
             self.optimizer.zero_grad()
             output = self.model(image)
+            print(output.shape)
+            print(target.shape)
             loss = self.criterion(output, target)
             loss.backward()
             self.optimizer.step()

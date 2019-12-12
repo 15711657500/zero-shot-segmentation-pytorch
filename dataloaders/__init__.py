@@ -1,13 +1,33 @@
 from dataloaders.datasets import cityscapes, combine_dbs, pascal, pascal_toy, sbd, bdd100k, bdd_toy, nice, embedding #coco
+from mypath import Path
 from torch.utils.data import DataLoader
 
+import fasttext
+import os
+
 def make_data_loader(args, **kwargs):
+    classes = {
+            'pascal' : ['aeroplane','bicycle','bird','boat',
+                 'bottle','bus','car','cat',
+                 'chair','cow','diningtable','dog',
+                 'horse','motorbike','person','pottedplant',
+                 'sheep','sofa','train','tvmonitor']
+            }
+    ft_dir = os.path.join(Path.db_root_dir('wiki'), 'wiki.en.bin')
+    print("Loading fasttext embedding - ", end='')
+    ft = fasttext.load_model(ft_dir)
+    print("Done")
 
     if args.dataset == 'pascal' or args.dataset == 'pascal_toy':
+        classes = classes['pascal']
+        nft = {}
+        for word in classes:
+            nft[word] = ft[word]
+        
         if args.dataset == 'pascal': p = pascal
         else: p = pascal_toy
-        train_set = p.VOCSegmentation(args, split='train')
-        val_set = p.VOCSegmentation(args, split='val')
+        train_set = p.VOCSegmentation(args, ft=nft, split='train')
+        val_set = p.VOCSegmentation(args, ft=nft, split='val')
         if args.use_sbd:
             sbd_train = sbd.SBDSegmentation(args, split=['train', 'val'])
             train_set = combine_dbs.CombineDBs([train_set, sbd_train], excluded=[val_set])
@@ -62,7 +82,7 @@ def make_data_loader(args, **kwargs):
         loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, **kwargs)
         return loader, num_classes
 
-    elif args.dataset == 'embedding':
+    elif args.dataset == 'embedding':        
         dataset = embedding.Embedding(args)
         num_classes = dataset.NUM_CLASSES
         loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, **kwargs)

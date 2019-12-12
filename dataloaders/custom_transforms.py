@@ -33,26 +33,10 @@ class Normalize(object):
 
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
-    def __init__(self, dataset):
+    def __init__(self, ft, reverse):
+        self.ft = ft
+        self.reverse = reverse
         
-        ft_dir = os.path.join(Path.db_root_dir('wiki'), 'wiki.en.bin')
-        print("Loading fasttext embedding - ", end='')
-        self.ft = fasttext.load_model(ft_dir)
-        print("Done")
-
-        classes = {
-            'pascal' : ['aeroplane','bicycle','bird','boat',
-                 'bottle','bus','car','cat',
-                 'chair','cow','diningtable','dog',
-                 'horse','motorbike','person','pottedplant',
-                 'sheep','sofa','train','tvmonitor']
-            }
-        
-        forward = classes[dataset]
-        self.reverse = {}
-        for i in range(len(pascal)):
-            self.reverse[i+1] = pascal[i]
-            
     def get_embedding(self, target):
         if target == 0 or target == 255: return np.zeros(300)
         return self.ft[self.reverse[int(target)]]
@@ -69,13 +53,13 @@ class ToTensor(object):
 
         if 'label' in sample:
             mask = sample['label']
-            mask = np.asarray(mask).astype(np.int32)
-            neo_shape = label.shape[0], label.shape[1], 300
+            mask = np.asarray(mask).astype(np.float32)
+            neo_shape = mask.shape[0], mask.shape[1], 300
             masked_label = np.zeros(neo_shape)
             for i in range(masked_label.shape[0]):
                 for j in range(masked_label.shape[1]):
-                    masked_label[i, j, :] = get_embedding(label[i, j])
-            
+                    masked_label[i, j, :] = self.get_embedding(mask[i, j])
+            masked_label = masked_label.transpose((2, 0, 1))
             mask = torch.from_numpy(masked_label).float()
             return {'image': img, 'label': mask, 'name': sample['name']}
 
