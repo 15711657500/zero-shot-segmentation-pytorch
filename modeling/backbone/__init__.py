@@ -20,7 +20,7 @@ def build_backbone(args):
     else:
         print (Norm, " <= normalization is not implemented")
 
-    if backbone == 'resnet':
+    if backbone == 'resnet' or backbone == 'resnet101':
         return resnet.ResNet101(output_stride, norm)
     elif backbone == 'resnet152':
         return resnet.ResNet152(output_stride, norm)
