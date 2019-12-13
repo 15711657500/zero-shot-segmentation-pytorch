@@ -117,6 +117,8 @@ class Trainer(object):
             self.model = torch.nn.DataParallel(self.model, device_ids=self.args.gpu_ids)
             #patch_replication_callback(self.model)
             self.model = self.model.cuda()
+            self.classifier = torch.nn.DataParallel(self.classifier, device_ids=self.args.gpu_ids)
+            self.classifier = self.classifier.cuda()
 
         # Resuming checkpoint
         self.best_pred = 0.0
@@ -198,6 +200,7 @@ class Trainer(object):
         self.model.train()
         tbar = tqdm(self.train_loader)
         num_img_tr = len(self.train_loader)
+        print("\nStarts training")        
         for i, sample in enumerate(tbar):
             image, target = sample['image'], sample['label']
             if self.args.cuda:
@@ -205,7 +208,7 @@ class Trainer(object):
             self.scheduler(self.optimizer, i, epoch, self.best_pred)
             self.optimizer.zero_grad()
             output = self.model(image)
-            
+            output = self.classifier(output)
             loss = self.criterion(output, target)
             loss.backward()
             self.optimizer.step()
