@@ -30,8 +30,28 @@ class Normalize(object):
         return {'image': img,
                 'name' : sample['name']}
 
-
 class ToTensor(object):
+    """Convert ndarrays in sample to Tensors."""
+
+    def __call__(self, sample):
+        # swap color axis because
+        # numpy image: H x W x C
+        # torch image: C X H X W
+        img = sample['image']
+        img = np.array(img).astype(np.float32).transpose((2, 0, 1))
+
+        img = torch.from_numpy(img).float()
+
+        if 'label' in sample:
+            mask = sample['label']
+            mask = np.asarray(mask).astype(np.float32)
+            mask = torch.from_numpy(mask).float()
+            return {'image': img, 'label': mask, 'name': sample['name']}
+
+        return {'image': img,
+                'name' : sample['name']}
+
+class ToTensorE(object):
     """Convert ndarrays in sample to Tensors."""
     def __init__(self, ft, reverse):
         self.ft = ft

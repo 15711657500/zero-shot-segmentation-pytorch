@@ -205,12 +205,12 @@ class Trainer(object):
             self.scheduler(self.optimizer, i, epoch, self.best_pred)
             self.optimizer.zero_grad()
             output = self.model(image)
-            print(output.shape)
-            print(target.shape)
+            
             loss = self.criterion(output, target)
             loss.backward()
             self.optimizer.step()
             train_loss += loss.item()
+
             tbar.set_description('Train loss: %.3f' % (train_loss / (i + 1)))
             continue
             #self.writer.add_scalar('train/total_loss_iter', loss.item(), i + num_img_tr * epoch)

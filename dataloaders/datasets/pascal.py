@@ -19,7 +19,6 @@ class VOCSegmentation(Dataset):
     def __init__(self,
                  args,
                  base_dir=Path.db_root_dir('pascal'),
-                 ft=None,
                  split='train',
                  ):
         """
@@ -28,7 +27,6 @@ class VOCSegmentation(Dataset):
         :param transform: transform to apply
         """
         super().__init__()
-        self.ft = ft
         self._base_dir = base_dir
         self._image_dir = os.path.join(self._base_dir, 'JPEGImages')
         if split=='val' and not args.labels==None: self._cat_dir = os.path.join(args.labels)
@@ -48,7 +46,7 @@ class VOCSegmentation(Dataset):
         self.images = []
         self.categories = []
         self.names = []
-
+        '''
         classes = {
             'pascal' : ['aeroplane','bicycle','bird','boat',
                  'bottle','bus','car','cat',
@@ -62,6 +60,7 @@ class VOCSegmentation(Dataset):
         
         for i in range(len(forward)):
             self.reverse[i+1] = forward[i]
+        '''
 
         for splt in self.split:
             with open(os.path.join(os.path.join(_splits_dir, splt + '.txt')), "r") as f:
@@ -111,7 +110,7 @@ class VOCSegmentation(Dataset):
 #            tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size),
 #            tr.RandomGaussianBlur(),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor(self.ft, self.reverse)])
+            tr.ToTensor()])
 
         return composed_transforms(sample)
 
@@ -120,7 +119,7 @@ class VOCSegmentation(Dataset):
         composed_transforms = transforms.Compose([
 #            tr.FixScaleCrop(crop_size=self.args.crop_size),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor(self.ft, self.reverse)])
+            tr.ToTensor()])
 
         return composed_transforms(sample)
 

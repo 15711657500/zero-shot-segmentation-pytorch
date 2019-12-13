@@ -19,7 +19,8 @@ class SegmentationLosses(object):
             raise NotImplementedError
 
     def CrossEntropyLoss(self, logit, target):
-        n, c, h, w = logit.size()
+        #n, c, h, w = logit.size()
+        n = logit.size()[0]
         criterion = nn.CrossEntropyLoss(weight=self.weight, ignore_index=self.ignore_index,
                                         size_average=self.size_average)
         if self.cuda:

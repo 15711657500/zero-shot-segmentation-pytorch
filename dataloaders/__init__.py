@@ -6,6 +6,7 @@ import fasttext
 import os
 
 def make_data_loader(args, **kwargs):
+    '''
     classes = {
             'pascal' : ['aeroplane','bicycle','bird','boat',
                  'bottle','bus','car','cat',
@@ -17,17 +18,20 @@ def make_data_loader(args, **kwargs):
     print("Loading fasttext embedding - ", end='')
     ft = fasttext.load_model(ft_dir)
     print("Done")
+    '''
 
     if args.dataset == 'pascal' or args.dataset == 'pascal_toy':
+        '''
         classes = classes['pascal']
         nft = {}
         for word in classes:
             nft[word] = ft[word]
+        '''
         
         if args.dataset == 'pascal': p = pascal
         else: p = pascal_toy
-        train_set = p.VOCSegmentation(args, ft=nft, split='train')
-        val_set = p.VOCSegmentation(args, ft=nft, split='val')
+        train_set = p.VOCSegmentation(args, split='train')
+        val_set = p.VOCSegmentation(args, split='val')
         if args.use_sbd:
             sbd_train = sbd.SBDSegmentation(args, split=['train', 'val'])
             train_set = combine_dbs.CombineDBs([train_set, sbd_train], excluded=[val_set])
